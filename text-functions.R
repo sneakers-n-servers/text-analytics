@@ -58,7 +58,7 @@ lecuture_functions <- function(book.vector){
   print(inspect(dtm))
 }
 
-longest <- function(book.frame, n = 5){
+longest <- function(book.frame, n = 10){
   longest.words <- book.frame %>%
     unnest_tokens(word, text) %>%
     mutate(word_size=nchar(word)) %>%
@@ -70,4 +70,63 @@ longest <- function(book.frame, n = 5){
     mutate(sentence_len=nchar(sentence)) %>%
     arrange(desc(sentence_len)) %>%
     top_n(n)
+  
+  longest.words
+  longest.sentences
 }
+
+remove_num_punc<- function(x){
+  #"[!\"#$%&'*+,./)(:;<=>?@\][\\^`{|}~]"
+  gsub("[^[:alpha:][:space:]]*", "", x)
+}
+
+clean_data <- function(book.vector){
+  vcorpus <- VCorpus(VectorSource(book.vector))
+  lower <- tm_map(vcorpus, content_transformer(tolower))
+  cleaned <- tm_map(lower, content_transformer(remove_num_punc))
+  
+  stopWords <- c(tm::stopwords('english'))
+  cleaned_nostop <- tm::tm_map(cleaned, tm::removeWords, stopWords)
+  
+  cleaned_nostop
+}
+
+remove_words_under_len_five <- function(sentence){
+  gsub('\\b\\w{1,5}\\s','',sentence)
+}
+
+clean_data_over_five <- function(sentences){
+  vcorpus <- VCorpus(VectorSource(sentences))
+  just_sentences <- vcorpus[["2"]][["content"]]
+  just_sentences_over_five <- tm_map(just_sentences, content_transformer(remove_words_under_len_five))
+  just_sentences_over_five
+}
+
+get_nouns <- function(word){
+  filter <- getTermFilter("ExactMatchFilter", word, TRUE)
+  nouns <- getIndexTerms("NOUN", 10, filter)
+  nouns
+}
+
+get_verbs <- function(word){
+  filter <- getTermFilter("ExactMatchFilter", word, TRUE)
+  verbs <- getIndexTerms("VERB", 10, filter)
+  verbs
+}
+
+filter_nouns_verbs <- function(sentence){
+  words <- strsplit(sentence, " ")
+  result.nouns <- lapply(words, content_transformer(get_nouns))
+  result.verbs <- lapply(words, content_transformer(get_verbs))
+  result
+}
+
+get_words<- function(sentence){
+  words <- strsplit(sentence, " ")
+  words <- unlist(words, recursive = FALSE)
+  words
+  # freq<-table(words)
+  # plot(sort(words.freq,decreasing = TRUE), ylab="Frequency", ylim=c(0,20), 
+  # main="Frequency of words")
+}
+

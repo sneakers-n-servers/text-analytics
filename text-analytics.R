@@ -1,6 +1,11 @@
 library(here)
 library(tidyverse)
+library(tidytext)
 library(stringr)
+
+library(textreuse)
+library(wordnet)
+library(zipfR)
 
 source("text-functions.R")
 
@@ -14,15 +19,60 @@ lecuture_functions(tarzan.lines)
 tarzan.frame <- data.frame(chapter=chapter_names, text=tarzan.chapters)
 str(tarzan.frame)
 
-tarzan.frame %>%
+#10 longest words and sentences
+longest_words <- tarzan.frame %>%
   unnest_tokens(word, text) %>%
   mutate(word_size=nchar(word)) %>%
   arrange(desc(word_size)) %>%
-  top_n(5)
+  top_n(10)
 
-tarzan.frame %>%
+longest_sentences <- tarzan.frame %>%
   unnest_tokens(sentence, text, token = "sentences") %>%
   mutate(sentence_len=nchar(sentence)) %>%
   arrange(desc(sentence_len)) %>%
-  top_n(5)
+  top_n(10)
 
+longest_words
+longest_sentences
+
+#clean data --> filter out stop words, remove numbers and punctuation, and (possibly) removing sparse words
+cleaned_data <- clean_data(tarzan.lines)
+cleaned_data
+
+#TODO: dendrogram not quite working 
+cleaned_data_tdm <- tm::TermDocumentMatrix(cleaned_data)
+freqTerms <- tm::findFreqTerms(cleaned_data_tdm)
+
+cleaned_df <- as.data.frame(cleaned_data_tdm[[1]])
+cleaned_dist <- dist(cleaned_df)
+dendrogram <- hclust(cleaned_dist, method="ward.D2")
+
+#WordNet to mark the parts of speech for the 10 longest sentences 
+#found in part b for nouns and verbs having a length of 5 or greater.
+source("text-functions.R")
+vcorpus <- VCorpus(VectorSource(longest_sentences))
+just_sentences <- list(vcorpus[["2"]][["content"]])
+just_sentences_over_five <- lapply(just_sentences, remove_words_under_len_five)
+just_sentences_over_five
+
+#TODO: Not quite working (getting all sentences, but not sure why this word parsing piece isn't working)
+nouns_verbs <- lapply(just_sentences_over_five, filter_nouns_verbs)
+nouns_verbs
+
+#Analyze word frequency using functions from package zipfR.
+all_words <- lapply(just_sentences, get_words)
+all_words
+
+tdmblog <- TermDocumentMatrix(cleaned_data, control = list(removePunctuation = TRUE, removeNumbers = TRUE, stopwords = TRUE))
+dtmblog <- DocumentTermMatrix(cleaned_data)
+m <- as.matrix(tdmblog)
+v <- sort(rowSums(m), decreasing=TRUE)
+freq <- sort(colSums(as.matrix(dtmblog)), decreasing=TRUE)   
+wfblog <- data.frame(word=names(freq), freq=freq)
+
+ggplot(subset(wfblog,freq>5000), aes(word,freq,fill=source)) + geom_bar(stat='identity',position='dodge') +theme(axis.text.x=element_text(angle=45, hjust=1))
+
+#Generate bigrams and trigrams for all words whose length is greater than 6 characters in the 10 longest sentences
+
+#Process the text from the document using stringi, corpustools, quanteda 
+#Describe the methods you use, the results, you get, and what you understand about the theme of the book.
