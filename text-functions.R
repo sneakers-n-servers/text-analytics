@@ -105,19 +105,24 @@ clean_data_over_five <- function(sentences){
 get_nouns <- function(word){
   filter <- getTermFilter("ExactMatchFilter", word, TRUE)
   nouns <- getIndexTerms("NOUN", 10, filter)
+  nouns <- sapply(nouns, getLemma)
   nouns
 }
 
 get_verbs <- function(word){
   filter <- getTermFilter("ExactMatchFilter", word, TRUE)
   verbs <- getIndexTerms("VERB", 10, filter)
+  verbs <- sapply(verbs, getLemma)
   verbs
 }
 
-filter_nouns_verbs <- function(sentence){
-  words <- strsplit(sentence, " ")
-  result.nouns <- lapply(words, content_transformer(get_nouns))
-  result.verbs <- lapply(words, content_transformer(get_verbs))
+filter_nouns <- function(words){
+  result <- lapply(words, get_nouns)
+  result
+}
+
+filter_verbs <- function(words){
+  result <- lapply(words, get_verbs)
   result
 }
 
@@ -129,4 +134,3 @@ get_words<- function(sentence){
   # plot(sort(words.freq,decreasing = TRUE), ylab="Frequency", ylim=c(0,20), 
   # main="Frequency of words")
 }
-

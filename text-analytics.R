@@ -4,6 +4,7 @@ library(tidytext)
 library(stringr)
 
 library(textreuse)
+# Sys.setenv(WNHOME = "/Library/Frameworks/R.framework/Versions/4.0/Resources/library/wordnet")
 library(wordnet)
 library(zipfR)
 
@@ -55,9 +56,23 @@ just_sentences <- list(vcorpus[["2"]][["content"]])
 just_sentences_over_five <- lapply(just_sentences, remove_words_under_len_five)
 just_sentences_over_five
 
-#TODO: Not quite working (getting all sentences, but not sure why this word parsing piece isn't working)
-nouns_verbs <- lapply(just_sentences_over_five, filter_nouns_verbs)
-nouns_verbs
+#Get list of all words over length 5
+words_over_five <- lapply(just_sentences_over_five, get_words)
+words_over_five
+
+#get all nouns
+result <- lapply(words_over_five, filter_nouns)
+
+#remove nulls and compress
+nouns <- unlist(result, recursive = FALSE)
+nouns[sapply(nouns, is.list)] <- NULL
+nouns
+
+#and verbs
+result <- lapply(words_over_five, filter_verbs)
+verbs <- unlist(result, recursive = FALSE)
+verbs[sapply(verbs, is.list)] <- NULL
+verbs
 
 #Analyze word frequency using functions from package zipfR.
 all_words <- lapply(just_sentences, get_words)
@@ -70,9 +85,11 @@ v <- sort(rowSums(m), decreasing=TRUE)
 freq <- sort(colSums(as.matrix(dtmblog)), decreasing=TRUE)   
 wfblog <- data.frame(word=names(freq), freq=freq)
 
-ggplot(subset(wfblog,freq>5000), aes(word,freq,fill=source)) + geom_bar(stat='identity',position='dodge') +theme(axis.text.x=element_text(angle=45, hjust=1))
+#TODO:actually do analysis on frequencies
+
 
 #Generate bigrams and trigrams for all words whose length is greater than 6 characters in the 10 longest sentences
+
 
 #Process the text from the document using stringi, corpustools, quanteda 
 #Describe the methods you use, the results, you get, and what you understand about the theme of the book.
