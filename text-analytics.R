@@ -74,6 +74,7 @@ verbs <- unlist(result, recursive = FALSE)
 verbs[sapply(verbs, is.list)] <- NULL
 verbs
 
+
 #Analyze word frequency using functions from package zipfR.
 all_words <- lapply(just_sentences, get_words)
 all_words
@@ -85,7 +86,44 @@ v <- sort(rowSums(m), decreasing=TRUE)
 freq <- sort(colSums(as.matrix(dtmblog)), decreasing=TRUE)   
 wfblog <- data.frame(word=names(freq), freq=freq)
 
-#TODO:actually do analysis on frequencies
+#Do analysis on frequencies
+wfblog <- na.omit(wfblog)
+summary(wfblog)
+
+wfblog_table <- table(wfblog$freq)
+length(wfblog$freq)
+wfblog$word
+barplot(wfblog$freq, names.arg = wfblog$word, main = "Frequency of Words", xlab = "Word", ylab = "# Times used",)
+
+
+
+library(zipfR)
+## This data works for the zm part, for some reason this doesnt work
+data(Dickens.spc)
+summary(Dickens.spc)
+
+wfblog_list <- data.frame(as.list(wfblog))
+
+numeric_word_data <- data.matrix(wfblog$word)
+numeric_word_data
+
+indexs <- seq(from = 1, to = length(numeric_word_data), by = 1)
+wfblog_tf <- tfl(wfblog$freq, k=indexs)
+wfblog_spc <- tfl2spc(wfblog_tf)
+
+# compute Zipf-Mandelbrot model from data and look at model summary
+zm <- lnre("zm", wfblog_spc)
+zm
+
+## plot observed and expected spectrum
+#TODO: Add words to numbers
+zm.spc <- lnre.spc(zm,N(wfblog_spc))
+plot(wfblog_spc, zm.spc, xlab="Most common words", ylab="Frequency",
+     ylim=c(0,4500))
+legend(27,16000,c("Observed Frequency", "Expected Frequency"),
+       col=c("black", "red"),pch= 15,box.col="white", cex=1)
+
+#TODO: Another zipfr visualization?
 
 
 #Generate bigrams and trigrams for all words whose length is greater than 6 characters in the 10 longest sentences
