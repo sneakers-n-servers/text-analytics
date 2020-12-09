@@ -95,10 +95,14 @@ remove_words_under_len_five <- function(sentence){
   gsub('\\b\\w{1,5}\\s','',sentence)
 }
 
+remove_words_under_len_six <- function(sentence){
+  gsub('\\b\\w{1,6}\\s','',sentence)
+}
+
 clean_data_over_five <- function(sentences){
   vcorpus <- VCorpus(VectorSource(sentences))
   just_sentences <- vcorpus[["2"]][["content"]]
-  just_sentences_over_five <- tm_map(just_sentences, content_transformer(remove_words_under_len_five))
+  just_sentences_over_five <- tm_map(just_sentences, remove_words_under_len_five)
   just_sentences_over_five
 }
 
@@ -126,6 +130,7 @@ filter_verbs <- function(words){
   result
 }
 
+#TODO: make this take in a sentence and a length (not getting for length 5 or length 6)
 get_words<- function(sentence){
   words <- strsplit(sentence, " ")
   words <- unlist(words, recursive = FALSE)
