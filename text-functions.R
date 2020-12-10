@@ -6,7 +6,7 @@ book_to_vector <- function(path, encoding = "UTF-8", display_count = 10, remove_
   stopifnot(file.exists(path))
   # Read file as vector remove empty lines
   book.lines <- readLines(
-    tarzan.file, 
+    path, 
     encoding="UTF-8"
   )
   book.lines <- book.lines[which(book.lines != "")]
@@ -30,8 +30,6 @@ get_chapter_names <- function(book.lines, chapter_regex = "Chapter [IVXLCDM]+"){
 }
 
 book_to_chapters <- function(book.lines, chapter_regex = "Chapter [IVXLCDM]+"){
-  #book.lines <- book.lines
-  
   # Get the index of each chapter, the next line is the title
   chapter_lines <- grep(chapter_regex, book.lines)
   titles <- chapter_lines + 1
@@ -44,7 +42,7 @@ book_to_chapters <- function(book.lines, chapter_regex = "Chapter [IVXLCDM]+"){
   chapters <- strsplit(single_line, "Chapter [IVXLCDM]+", fixed = FALSE, perl = TRUE)
   chapters <- lapply(chapters, trimws)[[1]]
   for(i in 1:length(chapters)){
-    chapters[i] <- str_replace_all(chapters[i], "[ ]+", " ")
+    chapters[i] <- str_replace_all(chapters[i], "[:space:]+", " ")
   }
   message("Displaying book by chapters")
   print(chapters)

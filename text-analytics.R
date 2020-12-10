@@ -27,16 +27,29 @@ longest_words <- tarzan.frame %>%
   unnest_tokens(word, text) %>%
   mutate(word_size=nchar(word)) %>%
   arrange(desc(word_size)) %>%
-  top_n(10)
+  top_n(10) %>%
+  mutate(order = fct_reorder(word, word_size))
 
 longest_sentences <- tarzan.frame %>%
   unnest_tokens(sentence, text, token = "sentences") %>%
   mutate(sentence_len=nchar(sentence)) %>%
   arrange(desc(sentence_len)) %>%
-  top_n(10)
+  top_n(10) %>%
+  mutate(head=substr(sentence, 1, 20)) %>%
+  mutate(order = fct_reorder(head, sentence_len))
 
 longest_words
 longest_sentences
+
+ggplot(longest_words) +
+  aes_string(x='order', y='word_size', fill='chapter') +
+  geom_bar(stat='identity', position='dodge', color='black') +
+  coord_flip()
+
+ggplot(longest_sentences) +
+  aes_string(x='order', y='sentence_len', fill='chapter') +
+  geom_bar(stat='identity', position='dodge', color='black') +
+  coord_flip()
 
 #clean data --> filter out stop words, remove numbers and punctuation, and (possibly) removing sparse words
 cleaned_data <- clean_data(tarzan.lines)
